@@ -45,25 +45,28 @@ export default function Blog() {
   const [editPost, setEditPost] = useState<typeof blogPosts[0] | null>(null)
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setUser({ uid: user.uid, email: user.email })
-        // Blog yazılarını yükle
-        try {
-          const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(50))
-          const snap = await getDocs(q)
-          const result = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as typeof blogPosts
-          if (result.length) setPosts(result)
-          else setPosts(blogPosts)
-        } catch (error) {
-          console.error('Blog yazıları yüklenemedi:', error)
-          setPosts(blogPosts)
-        }
-      } else {
-        setUser(null)
+    // Blog yazılarını her zaman yükle (giriş yapılmış olsun ya da olmasın)
+    const loadPosts = async () => {
+      try {
+        const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(50))
+        const snap = await getDocs(q)
+        const result = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as typeof blogPosts
+        if (result.length) setPosts(result)
+        else setPosts(blogPosts)
+      } catch (error) {
+        console.error('Blog yazıları yüklenemedi:', error)
         setPosts(blogPosts)
       }
+    }
+
+    // İlk yükleme
+    loadPosts()
+
+    // Auth state değişikliklerini dinle
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user ? { uid: user.uid, email: user.email } : null)
     })
+
     return unsubscribe
   }, [])
 
@@ -157,7 +160,15 @@ export default function Blog() {
             <h1 className="text-2xl font-bold text-white">Blog</h1>
             <div className="flex items-center gap-4">
               {user ? (
-                <span className="text-sm text-slate-300">{user.email}</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-slate-300">{user.email}</span>
+                  <button
+                    onClick={() => signOut(auth)}
+                    className="rounded-lg bg-red-500/20 px-3 py-1.5 text-red-300 ring-1 ring-inset ring-red-500/30 hover:bg-red-500/30 hover:text-red-200 transition-colors"
+                  >
+                    Çıkış Yap
+                  </button>
+                </div>
               ) : (
                 <button
                   onClick={() => signInWithPopup(auth, new GoogleAuthProvider())}
@@ -354,8 +365,13 @@ function AdminComposer({ canWrite, onCreate, onUpdate, onLogin, onLogout, userEm
       setTags(editPost.tags.join(','))
       setContent(editPost.content)
       setOpen(true)
+    } else if (open && !editMode) {
+      // Yeni yazı oluşturma modunda form'u temizle
+      setTitle('')
+      setTags('React,TypeScript')
+      setContent('')
     }
-  }, [editPost, editMode])
+  }, [editPost, editMode, open])
 
   const handleSubmit = async () => {
     if (editMode && editPost) {
@@ -403,7 +419,11 @@ function AdminComposer({ canWrite, onCreate, onUpdate, onLogin, onLogout, userEm
   return (
     <div className="space-y-4">
       <button
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          setEditMode(false)
+          setEditPost(null)
+          setOpen((v) => !v)
+        }}
         className="w-full rounded-lg bg-gradient-to-r from-sky-400 to-indigo-500 px-4 py-2.5 text-sm font-medium text-slate-950 hover:opacity-95 transition-opacity"
       >
         {open ? (editMode ? 'Düzenlemeyi Gizle' : 'Yeni Yazıyı Gizle') : 'Yeni Yazı Oluştur'}
