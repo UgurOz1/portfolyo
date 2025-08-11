@@ -171,7 +171,7 @@ export default function Blog() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Blog Bölümü */}
         <section className="space-y-8">
           <div>
@@ -179,40 +179,70 @@ export default function Blog() {
             <p className="mt-2 text-sm text-slate-400">Notlar, ipuçları ve öğrendiklerim.</p>
           </div>
           
-          <div className="flex flex-col gap-6 lg:flex-row">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
             {/* Sol: Liste ve arama */}
-            <div className="flex-1">
-              <div className="flex items-center gap-3">
-                <input
-                  value={blogSearch}
-                  onChange={(e) => setBlogSearch(e.target.value)}
-                  placeholder="Ara: React, Tailwind..."
-                  className="w-full rounded-xl bg-slate-900/60 px-4 py-3 text-sm text-white placeholder:text-slate-500 ring-1 ring-inset ring-white/10 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
-                />
-              </div>
-              
-              <div className="mt-4 grid gap-4">
-                {filteredBlogPosts.map((post) => (
-                  <div key={post.id} className="group relative">
-                    <button
-                      onClick={() => setSelectedPostId(post.id)}
-                      className="w-full text-left rounded-2xl border border-white/10 bg-white/5 p-4 ring-1 ring-inset ring-white/10 hover:bg-white/10"
-                    >
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-base font-medium text-white">{post.title}</h3>
-                        <span className="text-xs text-slate-400">{new Date(post.date).toLocaleDateString('tr-TR')}</span>
-                      </div>
-                      <p className="mt-1 text-sm text-slate-400">{post.excerpt}</p>
-                      <div className="mt-2 flex items-center justify-between">
-                        <div className="flex flex-wrap gap-2">
-                          {post.tags.map((t) => (
-                            <span key={t} className="rounded-md bg-slate-900/60 px-2 py-0.5 text-xs text-slate-300 ring-1 ring-inset ring-white/10">{t}</span>
-                          ))}
+            <div className="xl:col-span-1">
+              <div className="sticky top-24 space-y-6">
+                {/* Arama */}
+                <div className="space-y-4">
+                  <input
+                    value={blogSearch}
+                    onChange={(e) => setBlogSearch(e.target.value)}
+                    placeholder="Ara: React, Tailwind..."
+                    className="w-full rounded-xl bg-slate-900/60 px-4 py-3 text-sm text-white placeholder:text-slate-500 ring-1 ring-inset ring-white/10 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+                  />
+                  
+                  {/* Admin yazı oluşturma */}
+                  <AdminComposer 
+                    canWrite={isAdmin} 
+                    onCreate={createPost} 
+                    onUpdate={updatePost}
+                    onLogin={() => signInWithPopup(auth, new GoogleAuthProvider())} 
+                    onLogout={() => signOut(auth)} 
+                    userEmail={user?.email ?? null}
+                    editMode={editMode}
+                    setEditMode={setEditMode}
+                    editPost={editPost}
+                    setEditPost={setEditPost}
+                  />
+                </div>
+                
+                {/* Blog yazıları listesi */}
+                <div className="space-y-3">
+                  <h3 className="text-sm font-medium text-slate-300 uppercase tracking-wide">Yazılar</h3>
+                  {filteredBlogPosts.map((post) => (
+                    <div key={post.id} className="group">
+                      <button
+                        onClick={() => setSelectedPostId(post.id)}
+                        className={`w-full text-left p-3 rounded-lg border transition-all duration-200 ${
+                          selectedPostId === post.id
+                            ? 'border-sky-500/50 bg-sky-500/10'
+                            : 'border-white/10 bg-white/5 hover:bg-white/10'
+                        }`}
+                      >
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-medium text-white line-clamp-2">{post.title}</h4>
+                          <p className="text-xs text-slate-400 line-clamp-2">{post.excerpt}</p>
+                          <div className="flex items-center justify-between">
+                            <div className="flex flex-wrap gap-1">
+                              {post.tags.slice(0, 2).map((t) => (
+                                <span key={t} className="rounded-full bg-slate-800/80 px-2 py-0.5 text-xs text-slate-300">
+                                  {t}
+                                </span>
+                              ))}
+                              {post.tags.length > 2 && (
+                                <span className="rounded-full bg-slate-800/80 px-2 py-0.5 text-xs text-slate-300">
+                                  +{post.tags.length - 2}
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-xs text-slate-500">{new Date(post.date).toLocaleDateString('tr-TR')}</span>
+                          </div>
                         </div>
                         
-                        {/* Admin işlem butonları - Kartın içinde sağ alt */}
+                        {/* Admin işlem butonları */}
                         {user && (
-                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation()
@@ -220,7 +250,7 @@ export default function Blog() {
                                 setEditMode(true)
                                 setEditPost(post)
                               }}
-                              className="rounded-md bg-sky-500/20 px-2 py-1 text-xs text-sky-300 ring-1 ring-inset ring-sky-500/30 hover:bg-sky-500/30 hover:text-sky-200 transition-colors"
+                              className="rounded bg-sky-500/20 px-2 py-1 text-xs text-sky-300 hover:bg-sky-500/30 transition-colors"
                             >
                               ✏️
                             </button>
@@ -229,57 +259,62 @@ export default function Blog() {
                                 e.stopPropagation()
                                 deletePost(post.id)
                               }}
-                              className="rounded-md bg-red-500/20 px-2 py-1 text-xs text-red-300 ring-1 ring-inset ring-red-500/30 hover:bg-red-500/30 hover:text-red-200 transition-colors"
+                              className="rounded bg-red-500/20 px-2 py-1 text-xs text-red-300 hover:bg-red-500/30 transition-colors"
                             >
                               🗑️
                             </button>
                           </div>
                         )}
-                      </div>
-                    </button>
-                  </div>
-                ))}
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* Sağ: İçerik */}
-            <div className="lg:w-[45%]">
-              <div className="sticky top-24 rounded-2xl border border-white/10 bg-white/5 p-6 ring-1 ring-inset ring-white/10">
-                {(() => {
-                  const active = selectedPostId
-                    ? (posts.length ? posts : blogPosts).find((p) => p.id === selectedPostId)
-                    : (posts.length ? posts : blogPosts)[0]
-                  if (!active) return null
-                  return (
-                    <article>
-                      <h3 className="text-xl font-semibold text-white">{active.title}</h3>
-                      <div className="mt-1 text-xs text-slate-400">{new Date(active.date).toLocaleDateString('tr-TR')}</div>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {active.tags.map((t) => (
-                          <span key={t} className="rounded-md bg-slate-900/60 px-2 py-0.5 text-xs text-slate-300 ring-1 ring-inset ring-white/10">{t}</span>
-                        ))}
+            {/* Sağ: Blog yazısı içeriği */}
+            <div className="xl:col-span-2">
+              {(() => {
+                const active = selectedPostId
+                  ? (posts.length ? posts : blogPosts).find((p) => p.id === selectedPostId)
+                  : (posts.length ? posts : blogPosts)[0]
+                if (!active) return (
+                  <div className="text-center py-12">
+                    <p className="text-slate-400">Bir blog yazısı seçin</p>
+                  </div>
+                )
+                return (
+                  <article className="prose prose-invert prose-slate max-w-none">
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-8 ring-1 ring-inset ring-white/10">
+                      {/* Header */}
+                      <header className="mb-8">
+                        <h1 className="text-3xl font-bold text-white mb-4">{active.title}</h1>
+                        <div className="flex items-center gap-4 text-sm text-slate-400 mb-4">
+                          <span>{new Date(active.date).toLocaleDateString('tr-TR')}</span>
+                          <span>•</span>
+                          <span>{active.content.length} karakter</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {active.tags.map((t) => (
+                            <span key={t} className="rounded-full bg-slate-800/80 px-3 py-1 text-sm text-slate-300">
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      </header>
+                      
+                      {/* Content */}
+                      <div className="prose prose-invert prose-slate max-w-none">
+                        <div className="text-slate-300 leading-relaxed whitespace-pre-wrap text-base">
+                          {active.content}
+                        </div>
                       </div>
-                      <p className="mt-4 leading-relaxed text-slate-300">{active.content}</p>
-                    </article>
-                  )
-                })()}
-              </div>
+                    </div>
+                  </article>
+                )
+              })()}
             </div>
           </div>
-
-          {/* Admin yazı oluşturma */}
-          <AdminComposer 
-            canWrite={isAdmin} 
-            onCreate={createPost} 
-            onUpdate={updatePost}
-            onLogin={() => signInWithPopup(auth, new GoogleAuthProvider())} 
-            onLogout={() => signOut(auth)} 
-            userEmail={user?.email ?? null}
-            editMode={editMode}
-            setEditMode={setEditMode}
-            editPost={editPost}
-            setEditPost={setEditPost}
-          />
         </section>
       </main>
     </div>
@@ -349,59 +384,63 @@ function AdminComposer({ canWrite, onCreate, onUpdate, onLogin, onLogout, userEm
   if (allowed === null) return null
   if (!allowed)
     return (
-      <div className="mt-8 rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-slate-400">
-        Admin olarak giriş yaparsanız blog yazısı oluşturabilirsiniz.
-        <div className="mt-3 flex gap-2">
+      <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-slate-400">
+        <p className="mb-3">Admin olarak giriş yaparsanız blog yazısı oluşturabilirsiniz.</p>
+        <div className="flex gap-2">
           {userEmail ? (
-            <button onClick={onLogout} className="rounded-md bg-white/10 px-3 py-1.5 text-white ring-1 ring-inset ring-white/15 hover:bg-white/20">Çıkış Yap ({userEmail})</button>
+            <button onClick={onLogout} className="rounded-lg bg-white/10 px-3 py-1.5 text-white ring-1 ring-inset ring-white/15 hover:bg-white/20 transition-colors">
+              Çıkış Yap ({userEmail})
+            </button>
           ) : (
-            <button onClick={onLogin} className="rounded-md bg-white/10 px-3 py-1.5 text-white ring-1 ring-inset ring-white/15 hover:bg-white/20">Google ile Giriş Yap</button>
+            <button onClick={onLogin} className="rounded-lg bg-white/10 px-3 py-1.5 text-white ring-1 ring-inset ring-white/15 hover:bg-white/20 transition-colors">
+              Google ile Giriş Yap
+            </button>
           )}
         </div>
       </div>
     )
 
   return (
-    <div className="mt-8">
+    <div className="space-y-4">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="rounded-full bg-gradient-to-r from-sky-400 to-indigo-500 px-4 py-2 text-sm font-medium text-slate-950 hover:opacity-95"
+        className="w-full rounded-lg bg-gradient-to-r from-sky-400 to-indigo-500 px-4 py-2.5 text-sm font-medium text-slate-950 hover:opacity-95 transition-opacity"
       >
         {open ? (editMode ? 'Düzenlemeyi Gizle' : 'Yeni Yazıyı Gizle') : 'Yeni Yazı Oluştur'}
       </button>
 
       {open && (
-        <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4 ring-1 ring-inset ring-white/10">
-          <div className="grid gap-3">
+        <div className="rounded-xl border border-white/10 bg-white/5 p-4 ring-1 ring-inset ring-white/10">
+          <div className="space-y-3">
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Başlık"
-              className="w-full rounded-xl bg-slate-900/60 px-4 py-3 text-sm text-white placeholder:text-slate-500 ring-1 ring-inset ring-white/10 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+              className="w-full rounded-lg bg-slate-900/60 px-3 py-2 text-sm text-white placeholder:text-slate-500 ring-1 ring-inset ring-white/10 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
             />
             <input
               value={tags}
               onChange={(e) => setTags(e.target.value)}
               placeholder="Etiketler: React,TypeScript"
-              className="w-full rounded-xl bg-slate-900/60 px-4 py-3 text-sm text-white placeholder:text-slate-500 ring-1 ring-inset ring-white/10 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+              className="w-full rounded-lg bg-slate-900/60 px-3 py-2 text-sm text-white placeholder:text-slate-500 ring-1 ring-inset ring-white/10 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
             />
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              rows={8}
+              rows={6}
               placeholder="İçerik"
-              className="w-full resize-y rounded-xl bg-slate-900/60 px-4 py-3 text-sm text-white placeholder:text-slate-500 ring-1 ring-inset ring-white/10 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+              className="w-full resize-y rounded-lg bg-slate-900/60 px-3 py-2 text-sm text-white placeholder:text-slate-500 ring-1 ring-inset ring-white/10 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
             />
-            <div>
+            <div className="flex gap-2">
               <button
                 onClick={handleSubmit}
-                className="rounded-md bg-white text-slate-900 px-4 py-2 text-sm hover:bg-slate-100"
+                className="flex-1 rounded-lg bg-white text-slate-900 px-3 py-2 text-sm font-medium hover:bg-slate-100 transition-colors"
               >
                 {editMode ? 'Güncelle' : 'Yayınla'}
               </button>
               <button
                 onClick={handleCancel}
-                className="rounded-md bg-slate-900/60 px-4 py-2 text-sm text-white ring-1 ring-inset ring-white/15 hover:bg-slate-900/80"
+                className="flex-1 rounded-lg bg-slate-900/60 px-3 py-2 text-sm text-white ring-1 ring-inset ring-white/15 hover:bg-slate-900/80 transition-colors"
               >
                 İptal
               </button>
