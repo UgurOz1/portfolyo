@@ -110,6 +110,8 @@ function App() {
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null)
   const [posts, setPosts] = useState<typeof blogPosts>([])
   const [user, setUser] = useState<null | { uid: string; email: string | null }>(null)
+  const [editMode, setEditMode] = useState(false)
+  const [editPost, setEditPost] = useState<typeof blogPosts[0] | null>(null)
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
@@ -164,6 +166,50 @@ function App() {
     }
     await addDoc(collection(db, 'posts'), newDoc as any)
     alert('Yazı yayınlandı')
+    // Yazı listesini yenile
+    const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(50))
+    const snap = await getDocs(q)
+    const result = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as typeof blogPosts
+    if (result.length) setPosts(result)
+  }
+
+  const updatePost = async (postId: string, payload: { title: string; tags: string[]; content: string }) => {
+    if (!(await isAdmin())) return alert('Sadece admin yazı güncelleyebilir')
+    try {
+      const { updateDoc } = await import('firebase/firestore')
+      await updateDoc(doc(db, 'posts', postId), {
+        title: payload.title,
+        tags: payload.tags,
+        excerpt: payload.content.slice(0, 140) + '…',
+        content: payload.content,
+        updatedAt: serverTimestamp(),
+      })
+      alert('Yazı güncellendi')
+      // Yazı listesini yenile
+      const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(50))
+      const snap = await getDocs(q)
+      const result = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as typeof blogPosts
+      if (result.length) setPosts(result)
+    } catch (error) {
+      alert('Güncelleme hatası: ' + error)
+    }
+  }
+
+  const deletePost = async (postId: string) => {
+    if (!(await isAdmin())) return alert('Sadece admin yazı silebilir')
+    if (!confirm('Bu yazıyı silmek istediğinizden emin misiniz?')) return
+    try {
+      const { deleteDoc } = await import('firebase/firestore')
+      await deleteDoc(doc(db, 'posts', postId))
+      alert('Yazı silindi')
+      // Yazı listesini yenile
+      const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(50))
+      const snap = await getDocs(q)
+      const result = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as typeof blogPosts
+      if (result.length) setPosts(result)
+    } catch (error) {
+      alert('Silme hatası: ' + error)
+    }
   }
 
   
@@ -229,22 +275,51 @@ function App() {
               </div>
               <div className="mt-4 grid gap-4">
                 {filteredBlogPosts.map((post) => (
-                  <button
-                    key={post.id}
-                    onClick={() => setSelectedPostId(post.id)}
-                    className="text-left rounded-2xl border border-white/10 bg-white/5 p-4 ring-1 ring-inset ring-white/10 hover:bg-white/10"
-                  >
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-base font-medium text-white">{post.title}</h3>
-                      <span className="text-xs text-slate-400">{new Date(post.date).toLocaleDateString('tr-TR')}</span>
-                    </div>
-                    <p className="mt-1 text-sm text-slate-400">{post.excerpt}</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {post.tags.map((t) => (
-                        <span key={t} className="rounded-md bg-slate-900/60 px-2 py-0.5 text-xs text-slate-300 ring-1 ring-inset ring-white/10">{t}</span>
-                      ))}
-                    </div>
-        </button>
+                  <div key={post.id} className="group relative">
+                    <button
+                      onClick={() => setSelectedPostId(post.id)}
+                      className="w-full text-left rounded-2xl border border-white/10 bg-white/5 p-4 ring-1 ring-inset ring-white/10 hover:bg-white/10"
+                    >
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-base font-medium text-white">{post.title}</h3>
+                        <span className="text-xs text-slate-400">{new Date(post.date).toLocaleDateString('tr-TR')}</span>
+                      </div>
+                      <p className="mt-1 text-sm text-slate-400">{post.excerpt}</p>
+                      <div className="mt-2 flex items-center justify-between">
+                        <div className="flex flex-wrap gap-2">
+                          {post.tags.map((t) => (
+                            <span key={t} className="rounded-md bg-slate-900/60 px-2 py-0.5 text-xs text-slate-300 ring-1 ring-inset ring-white/10">{t}</span>
+                          ))}
+                        </div>
+                        
+                        {/* Admin işlem butonları - Kartın içinde sağ alt */}
+                        {user && (
+                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSelectedPostId(post.id)
+                                setEditMode(true)
+                                setEditPost(post)
+                              }}
+                              className="rounded-md bg-sky-500/20 px-2 py-1 text-xs text-sky-300 ring-1 ring-inset ring-sky-500/30 hover:bg-sky-500/30 hover:text-sky-200 transition-colors"
+                            >
+                              ✏️
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                deletePost(post.id)
+                              }}
+                              className="rounded-md bg-red-500/20 px-2 py-1 text-xs text-red-300 ring-1 ring-inset ring-red-500/30 hover:bg-red-500/30 hover:text-red-200 transition-colors"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>
@@ -275,7 +350,18 @@ function App() {
           </div>
 
           {/* Admin yazı oluşturma (sadece admin yetkisi doğrulandıktan sonra) */}
-          <AdminComposer canWrite={isAdmin} onCreate={createPost} onLogin={() => signInWithPopup(auth, new GoogleAuthProvider())} onLogout={() => signOut(auth)} userEmail={user?.email ?? null} />
+          <AdminComposer 
+            canWrite={isAdmin} 
+            onCreate={createPost} 
+            onUpdate={updatePost}
+            onLogin={() => signInWithPopup(auth, new GoogleAuthProvider())} 
+            onLogout={() => signOut(auth)} 
+            userEmail={user?.email ?? null}
+            editMode={editMode}
+            setEditMode={setEditMode}
+            editPost={editPost}
+            setEditPost={setEditPost}
+          />
         </section>
 
         {/* HAKKIMDA */}
@@ -469,12 +555,17 @@ export default App
 type AdminComposerProps = {
   canWrite: () => Promise<boolean>
   onCreate: (p: { title: string; tags: string[]; content: string }) => Promise<void>
+  onUpdate: (postId: string, payload: { title: string; tags: string[]; content: string }) => Promise<void>
   onLogin: () => void
   onLogout: () => void
   userEmail: string | null
+  editMode: boolean
+  setEditMode: (mode: boolean) => void
+  editPost: any | null
+  setEditPost: (post: any | null) => void
 }
 
-function AdminComposer({ canWrite, onCreate, onLogin, onLogout, userEmail }: AdminComposerProps) {
+function AdminComposer({ canWrite, onCreate, onUpdate, onLogin, onLogout, userEmail, editMode, setEditMode, editPost, setEditPost }: AdminComposerProps) {
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState('')
   const [tags, setTags] = useState('React,TypeScript')
@@ -486,6 +577,40 @@ function AdminComposer({ canWrite, onCreate, onLogin, onLogout, userEmail }: Adm
       setAllowed(await canWrite())
     })()
   }, [canWrite, userEmail])
+
+  // Edit mode'da form alanlarını doldur
+  useEffect(() => {
+    if (editPost && editMode) {
+      setTitle(editPost.title)
+      setTags(editPost.tags.join(','))
+      setContent(editPost.content)
+      setOpen(true)
+    }
+  }, [editPost, editMode])
+
+  const handleSubmit = async () => {
+    if (editMode && editPost) {
+      await onUpdate(editPost.id, { title, tags: tags.split(',').map((t) => t.trim()).filter(Boolean), content })
+      setEditMode(false)
+      setEditPost(null)
+    } else {
+      await onCreate({ title, tags: tags.split(',').map((t) => t.trim()).filter(Boolean), content })
+    }
+    // Form'u temizle
+    setTitle('')
+    setTags('React,TypeScript')
+    setContent('')
+    setOpen(false)
+  }
+
+  const handleCancel = () => {
+    setEditMode(false)
+    setEditPost(null)
+    setTitle('')
+    setTags('React,TypeScript')
+    setContent('')
+    setOpen(false)
+  }
 
   if (allowed === null) return null
   if (!allowed)
@@ -508,7 +633,7 @@ function AdminComposer({ canWrite, onCreate, onLogin, onLogout, userEmail }: Adm
         onClick={() => setOpen((v) => !v)}
         className="rounded-full bg-gradient-to-r from-sky-400 to-indigo-500 px-4 py-2 text-sm font-medium text-slate-950 hover:opacity-95"
       >
-        {open ? 'Yeni Yazıyı Gizle' : 'Yeni Yazı Oluştur'}
+        {open ? (editMode ? 'Düzenlemeyi Gizle' : 'Yeni Yazıyı Gizle') : 'Yeni Yazı Oluştur'}
       </button>
 
       {open && (
@@ -535,10 +660,16 @@ function AdminComposer({ canWrite, onCreate, onLogin, onLogout, userEmail }: Adm
             />
             <div>
               <button
-                onClick={() => onCreate({ title, tags: tags.split(',').map((t) => t.trim()).filter(Boolean), content })}
+                onClick={handleSubmit}
                 className="rounded-md bg-white text-slate-900 px-4 py-2 text-sm hover:bg-slate-100"
               >
-                Yayınla
+                {editMode ? 'Güncelle' : 'Yayınla'}
+              </button>
+              <button
+                onClick={handleCancel}
+                className="rounded-md bg-slate-900/60 px-4 py-2 text-sm text-white ring-1 ring-inset ring-white/15 hover:bg-slate-900/80"
+              >
+                İptal
               </button>
             </div>
           </div>
