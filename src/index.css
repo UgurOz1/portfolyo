@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+/* Global base styles (opsiyonel) */
+html, body, #root {
+  height: 100%;
+  scroll-behavior: smooth;
+}
+
+/* Arkaplanda beyaz flaşı engelle */
+html, body, #root {
+  background-color: #020617; /* slate-950 */
+  overscroll-behavior-y: none;
+  overflow-x: hidden;
+}
+
+/* Kaydırma çubuğu teması (beyaz parlamayı gizle) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #0ea5e9 #0b1220; /* track: koyu, thumb: sky-600 */
+}
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #0b1220; /* slate-950 uyumlu */
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #22d3ee, #818cf8);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #38bdf8, #6366f1);
+}
