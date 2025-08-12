@@ -6,10 +6,10 @@ import { Link } from 'react-router-dom'
 function App() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const skills: Array<{ label: string; level: number }> = [
-    { label: 'React', level: 90 },
-    { label: 'TypeScript', level: 85 },
-    { label: 'Tailwind CSS', level: 90 },
-    { label: 'Vite', level: 80 },
+    { label: 'React', level: 70 },
+    { label: 'TypeScript', level: 70 },
+    { label: 'Tailwind CSS', level: 70 },
+    { label: 'Java', level: 50 },
     { label: 'Python', level: 70 },
     { label: 'Git', level: 80 },
   ]
