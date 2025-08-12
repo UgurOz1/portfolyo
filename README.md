@@ -1,69 +1,55 @@
-# React + TypeScript + Vite
+# Portfolyo React Projesi
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Modern React ve TypeScript ile geliştirilmiş portfolyo web sitesi.
 
-Currently, two official plugins are available:
+## 🚀 Hızlı Başlangıç
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```bash
+# Bağımlılıkları yükle
+bun install
 
-## Expanding the ESLint configuration
+# Geliştirme sunucusunu başlat
+bun run dev
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+# Production build
+bun run build
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# GitHub Pages'e deploy et
+bun run deploy
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 📦 GitHub Pages Deployment
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Bu proje GitHub Pages'te yayınlanabilir. Deployment için:
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. **Repository'yi GitHub'a push edin**
+2. **GitHub repository ayarlarında:**
+   - Settings → Pages
+   - Source: "Deploy from a branch" seçin
+   - Branch: `gh-pages` seçin
+   - Save'e tıklayın
+
+3. **Deploy edin:**
+   ```bash
+   bun run deploy
+   ```
+
+4. **Site yayınlanacak:** `https://[kullanıcı-adınız].github.io/portfolyo_react/`
+
+## 🛠️ Teknolojiler
+
+- React 19
+- TypeScript
+- Vite
+- Tailwind CSS
+- Firebase
+
+## 📁 Proje Yapısı
+
+```
+src/
+├── pages/          # Sayfa bileşenleri
+├── assets/         # Statik dosyalar
+├── lib/           # Yardımcı kütüphaneler
+└── App.tsx        # Ana uygulama
 ```

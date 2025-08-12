@@ -1,16 +1,16 @@
-import { useEffect, useState } from 'react'
-import { auth, db } from './lib/firebase'
-import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth'
-import { doc, getDoc } from 'firebase/firestore'
+
+
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 function App() {
+  const [mobileOpen, setMobileOpen] = useState(false)
   const skills: Array<{ label: string; level: number }> = [
     { label: 'React', level: 90 },
     { label: 'TypeScript', level: 85 },
     { label: 'Tailwind CSS', level: 90 },
     { label: 'Vite', level: 80 },
-    { label: 'Node.js', level: 70 },
+    { label: 'Python', level: 70 },
     { label: 'Git', level: 80 },
   ]
 
@@ -67,67 +67,10 @@ function App() {
     },
   ]
 
-  const blogPosts: Array<{
-    id: string
-    title: string
-    date: string
-    tags: string[]
-    excerpt: string
-    content: string
-  }> = [
-    {
-      id: 'react-performans-ipuclari',
-      title: 'React + TypeScript ile performans ipuçları',
-      date: '2025-05-01',
-      tags: ['React', 'TypeScript', 'Performans'],
-      excerpt:
-        'Memoization, kod bölme ve uygun durum yönetimi ile arayüzlerinizi nasıl hızlandırabileceğinizi anlatıyorum.',
-      content:
-        'Bileşenlerin yeniden render edilme sayısını azaltmak için useMemo/useCallback ve React.memo kullanımı, dinamik import ile kod bölme, liste renderlarında key ve sanal listeleme gibi yöntemleri uygulamak büyük fark yaratır. Ayrıca server state ile client state ayrımını netleştirmek uygulamayı sadeleştirir.',
-    },
-    {
-      id: 'tailwind-ile-tasarim-sistemi',
-      title: 'Tailwind CSS ile tasarım sistemi kurmak',
-      date: '2025-04-10',
-      tags: ['Tailwind', 'Design System'],
-      excerpt:
-        'Token tabanlı renkler, tipografi ölçekleri ve yardımcı sınıflarla tutarlı bir sistem kurma yaklaşımı.',
-      content:
-        'Renkler, aralıklar ve tipografi gibi temel tasarım tokenlarını tailwind.config içinde genişletmek; bileşenlere anlamlı yardımcı sınıflar atamak ve varyantları (hover, focus, aria) standartlaştırmak hızlı ve tutarlı arayüz üretir.',
-    },
-    {
-      id: 'vite-ile-hizli-gelistirme',
-      title: 'Vite ile hızlı geliştirme deneyimi',
-      date: '2025-03-15',
-      tags: ['Vite', 'Tooling'],
-      excerpt:
-        'Vite HMR, kod bölme ve modern ESM mimarisi ile geliştirici deneyimini nasıl iyileştirir?',
-      content:
-        'Vite, ESM temelli hızlı sunucu ve optimize build pipeline ile büyük projelerde dahi anında geri bildirim sağlar. Alias, env yapısı ve esbuild/rollup entegrasyonu ile konfigurasyon sadedir.',
-    },
-  ]
 
-  const [user, setUser] = useState<null | { uid: string; email: string | null }>(null)
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user ? { uid: user.uid, email: user.email } : null)
-    })
-    return unsubscribe
-  }, [])
 
-  const isAdmin = async (): Promise<boolean> => {
-    if (!user) return false
-    try {
-      console.log('Checking admin for UID:', user.uid)
-      const adminDoc = await getDoc(doc(db, 'admins', user.uid))
-      console.log('Admin doc exists:', adminDoc.exists())
-      return adminDoc.exists()
-    } catch (error) {
-      console.error('Admin check error:', error)
-      return false
-    }
-  }
+
 
   return (
     <div className="relative min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-sky-400/20">
@@ -148,7 +91,30 @@ function App() {
             <a href="#contact" className="rounded-full px-4 py-2 text-slate-200 hover:text-white ring-1 ring-inset ring-white/10 hover:bg-white/10">İletişim</a>
             <Link to="/blog" className="rounded-full px-4 py-2 text-slate-200 hover:text-white ring-1 ring-inset ring-white/10 hover:bg-white/10">Blog</Link>
           </div>
+          <div className="md:hidden">
+            <button
+              type="button"
+              aria-label="Menüyü aç/kapat"
+              onClick={() => setMobileOpen((v) => !v)}
+              className="inline-flex items-center justify-center rounded-full p-2 text-slate-200 ring-1 ring-inset ring-white/10 hover:bg-white/10 focus:outline-none"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+                <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </button>
+          </div>
         </nav>
+        {mobileOpen && (
+          <div className="md:hidden border-t border-white/5 bg-slate-950/90 backdrop-blur">
+            <div className="mx-auto max-w-7xl px-6 sm:px-8 py-3 flex flex-col gap-1">
+              <a href="#about" onClick={() => setMobileOpen(false)} className="rounded-lg px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10">Hakkımda</a>
+              <a href="#skills" onClick={() => setMobileOpen(false)} className="rounded-lg px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10">Yetenekler</a>
+              <a href="#projects" onClick={() => setMobileOpen(false)} className="rounded-lg px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10">Projeler</a>
+              <a href="#contact" onClick={() => setMobileOpen(false)} className="rounded-lg px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10">İletişim</a>
+              <Link to="/blog" onClick={() => setMobileOpen(false)} className="rounded-lg px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10">Blog</Link>
+            </div>
+          </div>
+        )}
       </header>
 
       <main className="mx-auto max-w-7xl px-6 sm:px-8">

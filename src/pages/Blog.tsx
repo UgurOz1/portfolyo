@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { auth, db } from '../lib/firebase'
-import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth'
+import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signOut } from 'firebase/auth'
 import { addDoc, collection, doc, getDoc, getDocs, limit, orderBy, query, serverTimestamp } from 'firebase/firestore'
+import { Link } from 'react-router-dom'
 
 const blogPosts = [
   {
@@ -44,6 +45,16 @@ export default function Blog() {
   const [editMode, setEditMode] = useState(false)
   const [editPost, setEditPost] = useState<typeof blogPosts[0] | null>(null)
 
+  // Google ile giriş: popup başarısız olursa redirect'e düş
+  const loginWithGoogle = async () => {
+    try {
+      await signInWithPopup(auth, new GoogleAuthProvider())
+    } catch (err: any) {
+      // Mobil/Safari veya popup engelliyse
+      await signInWithRedirect(auth, new GoogleAuthProvider())
+    }
+  }
+
   useEffect(() => {
     // Blog yazılarını her zaman yükle (giriş yapılmış olsun ya da olmasın)
     const loadPosts = async () => {
@@ -66,6 +77,9 @@ export default function Blog() {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user ? { uid: user.uid, email: user.email } : null)
     })
+
+    // Redirect akışından dönüldüyse sonucu al (hata yakalamak için)
+    getRedirectResult(auth).catch(() => {})
 
     return unsubscribe
   }, [])
@@ -154,9 +168,9 @@ export default function Blog() {
       <header className="border-b border-white/5 bg-slate-900/50 backdrop-blur-xl">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
-            <a href="/" className="text-xl font-bold text-white hover:text-sky-300 transition-colors">
+            <Link to="/" className="text-xl font-bold text-white hover:text-sky-300 transition-colors">
               ← Ana Sayfa
-            </a>
+            </Link>
             <h1 className="text-2xl font-bold text-white">Blog</h1>
             <div className="flex items-center gap-4">
               {user ? (
@@ -171,7 +185,7 @@ export default function Blog() {
                 </div>
               ) : (
                 <button
-                  onClick={() => signInWithPopup(auth, new GoogleAuthProvider())}
+                  onClick={loginWithGoogle}
                   className="rounded-full bg-white/10 px-4 py-2 text-sm text-white ring-1 ring-inset ring-white/15 hover:bg-white/20"
                 >
                   Giriş Yap
