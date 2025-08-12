@@ -7,8 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
-    
+    "preview": "vite preview",
+    "deploy": "bun run build && gh-pages -d dist",
+    "predeploy": "bun run build"
   },
   "dependencies": {
     "firebase": "^12.1.0",
