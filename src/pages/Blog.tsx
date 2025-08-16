@@ -4,46 +4,22 @@ import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signInWithRedi
 import { addDoc, collection, doc, getDoc, getDocs, limit, orderBy, query, serverTimestamp } from 'firebase/firestore'
 import { Link } from 'react-router-dom'
 
-const blogPosts = [
-  {
-    id: 'react-performans-ipuclari',
-    title: 'React + TypeScript ile performans ipuçları',
-    date: '2025-05-01',
-    tags: ['React', 'TypeScript', 'Performans'],
-    excerpt:
-      'Memoization, kod bölme ve uygun durum yönetimi ile arayüzlerinizi nasıl hızlandırabileceğinizi anlatıyorum.',
-    content:
-      'Bileşenlerin yeniden render edilme sayısını azaltmak için useMemo/useCallback ve React.memo kullanımı, dinamik import ile kod bölme, liste renderlarında key ve sanal listeleme gibi yöntemleri uygulamak büyük fark yaratır. Ayrıca server state ile client state ayrımını netleştirmek uygulamayı sadeleştirir.',
-  },
-  {
-    id: 'tailwind-ile-tasarim-sistemi',
-    title: 'Tailwind CSS ile tasarım sistemi kurmak',
-    date: '2025-04-10',
-    tags: ['Tailwind', 'Design System'],
-    excerpt:
-      'Token tabanlı renkler, tipografi ölçekleri ve yardımcı sınıflarla tutarlı bir sistem kurma yaklaşımı.',
-    content:
-      'Renkler, aralıklar ve tipografi gibi temel tasarım tokenlarını tailwind.config içinde genişletmek; bileşenlere anlamlı yardımcı sınıflar atamak ve varyantları (hover, focus, aria) standartlaştırmak hızlı ve tutarlı arayüz üretir.',
-  },
-  {
-    id: 'vite-ile-hizli-gelistirme',
-    title: 'Vite ile hızlı geliştirme deneyimi',
-    date: '2025-03-15',
-    tags: ['Vite', 'Build Tools', 'Developer Experience'],
-    excerpt:
-      'ES modules tabanlı bundler ile geliştirme sürecini nasıl hızlandırabileceğinizi gösteriyorum.',
-    content:
-      'Vite, geliştirme sunucusunda ES modules kullanarak sadece değişen dosyaları yeniden yükler. Bu sayede büyük projelerde bile hot reload süresi milisaniyeler seviyesinde kalır. Production build için Rollup kullanarak optimize edilmiş bundle üretir.',
-  },
-]
+type Post = {
+  id: string
+  title: string
+  date: string
+  tags: string[]
+  excerpt: string
+  content: string
+}
 
 export default function Blog() {
   const [blogSearch, setBlogSearch] = useState('')
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null)
-  const [posts, setPosts] = useState<typeof blogPosts>([])
+  const [posts, setPosts] = useState<Post[]>([])
   const [user, setUser] = useState<null | { uid: string; email: string | null }>(null)
   const [editMode, setEditMode] = useState(false)
-  const [editPost, setEditPost] = useState<typeof blogPosts[0] | null>(null)
+  const [editPost, setEditPost] = useState<Post | null>(null)
 
   // Google ile giriş: popup başarısız olursa redirect'e düş
   const loginWithGoogle = async () => {
@@ -61,12 +37,11 @@ export default function Blog() {
       try {
         const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(50))
         const snap = await getDocs(q)
-        const result = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as typeof blogPosts
-        if (result.length) setPosts(result)
-        else setPosts(blogPosts)
+        const result = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as Post[]
+        setPosts(result)
       } catch (error) {
         console.error('Blog yazıları yüklenemedi:', error)
-        setPosts(blogPosts)
+        setPosts([])
       }
     }
 
@@ -86,9 +61,8 @@ export default function Blog() {
 
   const filteredBlogPosts = useMemo(() => {
     const qStr = blogSearch.trim().toLowerCase()
-    const source = posts.length ? posts : blogPosts
-    if (!qStr) return source
-    return source.filter((p) => [p.title, p.excerpt, ...(p.tags || [])].some((t) => t.toLowerCase().includes(qStr)))
+    if (!qStr) return posts
+    return posts.filter((p) => [p.title, p.excerpt, ...(p.tags || [])].some((t) => t.toLowerCase().includes(qStr)))
   }, [blogSearch, posts])
 
   const isAdmin = async (): Promise<boolean> => {
@@ -119,7 +93,7 @@ export default function Blog() {
     // Yazı listesini yenile
     const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(50))
     const snap = await getDocs(q)
-    const result = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as typeof blogPosts
+    const result = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as Post[]
     if (result.length) setPosts(result)
   }
 
@@ -138,7 +112,7 @@ export default function Blog() {
       // Yazı listesini yenile
       const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(50))
       const snap = await getDocs(q)
-      const result = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as typeof blogPosts
+      const result = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as Post[]
       if (result.length) setPosts(result)
     } catch (error) {
       alert('Güncelleme hatası: ' + error)
@@ -155,7 +129,7 @@ export default function Blog() {
       // Yazı listesini yenile
       const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(50))
       const snap = await getDocs(q)
-      const result = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as typeof blogPosts
+      const result = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as Post[]
       if (result.length) setPosts(result)
     } catch (error) {
       alert('Silme hatası: ' + error)
@@ -301,13 +275,15 @@ export default function Blog() {
             <div className="xl:col-span-2">
               {(() => {
                 const active = selectedPostId
-                  ? (posts.length ? posts : blogPosts).find((p) => p.id === selectedPostId)
-                  : (posts.length ? posts : blogPosts)[0]
-                if (!active) return (
-                  <div className="text-center py-12">
-                    <p className="text-slate-400">Bir blog yazısı seçin</p>
-                  </div>
-                )
+                  ? posts.find((p) => p.id === selectedPostId)
+                  : posts[0]
+                if (!active) {
+                  return (
+                    <div className="text-center py-12">
+                      <p className="text-slate-400">Henüz yazı yok</p>
+                    </div>
+                  )
+                }
                 return (
                   <article className="prose prose-invert prose-slate max-w-none">
                     <div className="rounded-2xl border border-white/10 bg-white/5 p-8 ring-1 ring-inset ring-white/10">
