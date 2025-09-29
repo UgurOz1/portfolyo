@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useInView } from 'react-intersection-observer'
+import { useSiteContent } from './hooks/useSiteContent'
 
 // Typing animation hook
 const useTypingAnimation = (text: string, speed: number = 100) => {
@@ -54,68 +55,15 @@ const AnimatedSection = ({ children, className, id }: { children: React.ReactNod
 
 function App() {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const typedText = useTypingAnimation('Uğur', 150)
-  const skills: Array<{ label: string; level: number }> = [
-    { label: 'React', level: 70 },
-    { label: 'TypeScript', level: 70 },
-    { label: 'Tailwind CSS', level: 70 },
-    { label: 'Java', level: 50 },
-    { label: 'Python', level: 70 },
-    { label: 'Git', level: 80 },
-  ]
-
-  const projects: Array<{
-    title: string
-    description: string
-    tags: string[]
-    stars?: number
-    demo?: string
-    code?: string
-  }> = [
-      {
-        title: 'restoran-App',
-        description: 'Açıklama eklenmemiş.',
-        tags: ['TypeScript'],
-        stars: 0,
-        code: 'https://github.com/UgurOz1/restoran-App',
-      },
-      {
-        title: 'To-Do-List',
-        description: 'Açıklama eklenmemiş.',
-        tags: ['TypeScript'],
-        stars: 0,
-        code: 'https://github.com/UgurOz1/To-Do-List',
-      },
-      {
-        title: 'TechBlog',
-        description: 'Açıklama eklenmemiş.',
-        tags: ['Python'],
-        stars: 0,
-        code: 'https://github.com/UgurOz1/TechBlog',
-      },
-      {
-        title: 'mucize_komur_evi',
-        description: 'Açıklama eklenmemiş.',
-        tags: ['CSS'],
-        stars: 0,
-        demo: 'https://uguroz1.github.io/mucize_komur_evi/',
-        code: 'https://github.com/UgurOz1/mucize_komur_evi',
-      },
-      {
-        title: 'TicTacToe',
-        description: 'A simple TicTacToe game developed with Java',
-        tags: ['Java'],
-        stars: 0,
-        code: 'https://github.com/UgurOz1/TicTacToe',
-      },
-      {
-        title: 'StudentDatabaseApplication',
-        description: 'It is a simple project that was developed with Java',
-        tags: ['Java'],
-        stars: 0,
-        code: 'https://github.com/UgurOz1/StudentDatabaseApplication',
-      },
-    ]
+  const { content, loading } = useSiteContent()
+  const typedText = useTypingAnimation(content.hero.name, 150)
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="text-white">Yükleniyor...</div>
+      </div>
+    )
+  }
 
 
 
@@ -285,7 +233,7 @@ function App() {
                   }}
                   style={{ backgroundSize: '200% 200%' }}
                 >
-                  Uğur
+                  {content.hero.name}
                 </motion.span>
               </motion.h1>
               <motion.p
@@ -294,7 +242,7 @@ function App() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.6 }}
               >
-                Web arayüzleri ve etkileşimli deneyimler tasarlayan bir geliştiriciyim. Modern, performanslı ve kullanıcı odaklı ürünler geliştiriyorum.
+                {content.hero.description}
               </motion.p>
               <motion.div
                 className="mt-8 flex flex-wrap items-center gap-3"
@@ -398,12 +346,7 @@ function App() {
                 transition={{ duration: 0.3 }}
               >
                 <p className="leading-relaxed text-slate-300">
-                  Frontend odaklı bir geliştiriciyim. Tasarım sistemleri kurar, performans ve erişilebilirliği önceleyerek
-                  modern arayüzler geliştiririm. Temiz kod, yeniden kullanılabilir bileşenler ve yalın mimari benim için
-                  temel prensiplerdir. Şu anda{' '}
-                  <a href="https://www.rise-consulting.net/" target="_blank" rel="noreferrer" className="underline decoration-sky-500/50 hover:text-sky-300">Rise Technology, Consulting & Academy</a>
-                  'de staj yapıyorum ve React + TypeScript ile projeler geliştiriyorum. Giresun Üniversitesi Bilgisayar
-                  Mühendisliği 3. sınıf öğrencisiyim.
+                  {content.about.summary}
                 </p>
                 <ul className="mt-5 space-y-2 text-slate-300">
                   <li className="flex items-start gap-3"><span className="mt-1 inline-block h-2 w-2 rounded-full bg-sky-400" /> Tasarım sistemi oluşturma ve komponent mimarisi</li>
@@ -419,8 +362,8 @@ function App() {
                   </div>
                 </div>
                 <div className="mt-6 flex flex-wrap gap-3">
-                  <a href="uguro9319@gmail.com" className="inline-flex items-center rounded-full bg-sky-500/10 px-4 py-2 text-sm text-sky-300 ring-1 ring-inset ring-sky-500/30 hover:bg-sky-500/20">E‑posta</a>
-                  <a href="https://github.com/UgurOz1" target="_blank" rel="noreferrer" className="inline-flex items-center rounded-full bg-white px-4 py-2 text-sm text-slate-900 hover:bg-slate-100">CV / GitHub</a>
+                  <a href={`mailto:${content.contact.email}`} className="inline-flex items-center rounded-full bg-sky-500/10 px-4 py-2 text-sm text-sky-300 ring-1 ring-inset ring-sky-500/30 hover:bg-sky-500/20">E‑posta</a>
+                  <a href={content.contact.github} target="_blank" rel="noreferrer" className="inline-flex items-center rounded-full bg-white px-4 py-2 text-sm text-slate-900 hover:bg-slate-100">CV / GitHub</a>
                 </div>
               </motion.div>
 
@@ -463,24 +406,7 @@ function App() {
             >
               <h3 className="text-sm text-slate-300">Deneyim Zaman Çizelgesi</h3>
               <ol className="relative mt-4 space-y-5 before:absolute before:left-2 before:top-0 before:h-full before:w-px before:bg-white/10">
-                {[
-                  {
-                    title: 'Frontend Intern',
-                    company: 'Rise Technology, Consulting & Academy',
-                    url: 'https://www.rise-consulting.net/',
-                    period: '2025 – Güncel',
-                    description: 'React + TypeScript ile ürün/iç araç projeleri geliştirme, bileşen kütüphaneleri ve UI entegrasyonları.',
-                    color: 'bg-sky-400'
-                  },
-                  {
-                    title: 'Giresun Üniversitesi — Bilgisayar Mühendisliği (3. Sınıf)',
-                    company: '',
-                    url: '',
-                    period: '—',
-                    description: 'Algoritmalar, veri yapıları ve yazılım mühendisliği temelleri.',
-                    color: 'bg-cyan-400'
-                  }
-                ].map((item, index) => (
+                {content.about.experience.map((item, index) => (
                   <motion.li
                     key={index}
                     className="relative pl-8"
@@ -490,7 +416,7 @@ function App() {
                     viewport={{ once: true }}
                   >
                     <motion.span
-                      className={`absolute left-0 top-2 h-2 w-2 rounded-full ${item.color}`}
+                      className={`absolute left-0 top-2 h-2 w-2 rounded-full ${index % 2 === 0 ? 'bg-sky-400' : 'bg-cyan-400'}`}
                       initial={{ scale: 0 }}
                       whileInView={{ scale: 1 }}
                       viewport={{ once: true }}
@@ -516,19 +442,7 @@ function App() {
                         {item.company && (
                           <>
                             {' — '}
-                            {item.url ? (
-                              <motion.a
-                                href={item.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="underline decoration-sky-500/50 hover:text-sky-300"
-                                whileHover={{ color: '#38bdf8' }}
-                              >
-                                {item.company}
-                              </motion.a>
-                            ) : (
-                              item.company
-                            )}
+                            <span className="text-sky-300">{item.company}</span>
                           </>
                         )}
                       </span>
@@ -554,7 +468,7 @@ function App() {
             <p className="mt-2 text-sm text-slate-400">Teknik yetkinlikler</p>
           </motion.div>
           <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {skills.map((s, index) => (
+            {content.skills.map((s, index) => (
               <motion.div
                 key={s.label}
                 className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5 ring-1 ring-inset ring-white/10 group"
@@ -619,7 +533,7 @@ function App() {
             <p className="mt-2 text-sm text-slate-400">Seçili çalışmalarım. Kartların üzerine gelerek etkileşimi deneyimleyin.</p>
           </motion.div>
           <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {projects.map((p, index) => (
+            {content.projects.map((p, index) => (
               <motion.div
                 key={p.title}
                 className="group overflow-hidden rounded-2xl border border-white/10 bg-slate-900/40 ring-1 ring-inset ring-white/10 backdrop-blur"

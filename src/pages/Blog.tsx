@@ -149,6 +149,12 @@ export default function Blog() {
             <div className="flex items-center gap-4">
               {user ? (
                 <div className="flex items-center gap-3">
+                  <Link 
+                    to="/admin" 
+                    className="rounded-lg bg-sky-500/20 px-3 py-1.5 text-sky-300 ring-1 ring-inset ring-sky-500/30 hover:bg-sky-500/30 hover:text-sky-200 transition-colors"
+                  >
+                    Admin Panel
+                  </Link>
                   <span className="text-sm text-slate-300">{user.email}</span>
                   <button
                     onClick={() => signOut(auth)}
